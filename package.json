@@ -13,8 +13,7 @@
     "lint": "npm run next-lint && npm run format",
     "next-lint": "next lint --fix --quiet",
     "format": "prettier --write --log-level error .",
-    "prepare": "husky",
-    "test": "next dev"
+    "prepare": "husky"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.18",
