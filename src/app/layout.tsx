@@ -48,13 +48,11 @@ export default function RootLayout({
           <main
             className={`flex min-h-screen flex-col ${inter.className}`}
           >
-            <Header />
             <div className="flex flex-1 justify-center w-full">
               <div className="flex w-full h-full">
                 {children}
               </div>
             </div>
-            <Footer />
           </main>
         </ThemeProvider>
       </body>
