@@ -16,6 +16,8 @@ import { minnesotaData } from '@/data/minnesota'
 import { wisconsinData } from '@/data/wisconsin'
 import { southDakotaData } from '@/data/south-dakota'
 import { useState, useEffect } from 'react'
+import MapList from './mapList'
+import MapHeader from './mapHeader'
 
 interface MarkerData {
   latitude: number
@@ -97,6 +99,10 @@ function MapEvents({ setNorthEast, setSouthWest }) {
 }
 
 export default function MyMap() {
+  const [isStarFilterOn, setIsStarFilterOn] =
+    useState(false)
+  const [currentMarkers, setCurrentMarkers] =
+    useState(markers)
   const [northEast, setNorthEast] = useState(null)
   const [southWest, setSouthWest] = useState(null)
   const [visibleMarkers, setVisibleMarkers] = useState<
@@ -105,7 +111,7 @@ export default function MyMap() {
 
   useEffect(() => {
     if (northEast && southWest) {
-      const tempVisibleMarkers = markers.filter(
+      const tempVisibleMarkers = currentMarkers.filter(
         (marker) => {
           return (
             marker.latitude <= northEast.lat &&
@@ -118,85 +124,62 @@ export default function MyMap() {
 
       setVisibleMarkers(tempVisibleMarkers)
     }
-  }, [northEast, southWest])
+  }, [northEast, southWest, currentMarkers])
 
   return (
     <div
       style={{
-        display: 'inline-flex',
-        flexDirection: 'row',
         width: '100%'
       }}
     >
-      <MapContainer
-        center={minneapolisLongLat}
-        zoom={10}
-        scrollWheelZoom={false}
-        style={{ width: '100%', height: '1000px' }}
-      >
-        <MapEvents
-          setNorthEast={setNorthEast}
-          setSouthWest={setSouthWest}
-        />
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {markers.map((data) => (
-          <Marker
-            key={data.url}
-            position={[data.latitude, data.longitude]}
-          >
-            <Popup>
-              <>
-                {data.route} ({data.stars})
-                <br />
-                {data.location}
-                <br />
-                {data.rating}
-                <br />
-                <a href={data.url}>Link</a>
-              </>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
+      <MapHeader
+        visibleMarkers={visibleMarkers}
+        isStarFilterOn={isStarFilterOn}
+        setIsStarFilterOn={setIsStarFilterOn}
+        markers={markers}
+        setCurrentMarkers={setCurrentMarkers}
+      />
       <div
         style={{
-          backgroundColor: 'white',
-          width: '30%',
-          maxHeight: '1000px',
-          overflowY: 'scroll'
+          display: 'inline-flex',
+          flexDirection: 'row',
+          width: '100%'
         }}
       >
-        <div
-          style={{
-            border: '1px solid black',
-            color: 'black'
-          }}
+        <MapContainer
+          center={minneapolisLongLat}
+          zoom={10}
+          scrollWheelZoom={false}
+          style={{ width: '100%', height: '900px' }}
         >
-          {visibleMarkers.length}
-        </div>
-        {visibleMarkers
-          .sort((a, b) => (a.stars > b.stars ? -1 : 1))
-          .map((visibleMarker) => (
-            <div
-              key={visibleMarker.url}
-              style={{
-                border: '1px solid black',
-                color: 'black'
-              }}
+          <MapEvents
+            setNorthEast={setNorthEast}
+            setSouthWest={setSouthWest}
+          />
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {currentMarkers.map((data) => (
+            <Marker
+              key={data.url}
+              position={[data.latitude, data.longitude]}
             >
-              {visibleMarker.route} ({visibleMarker.stars}{' '}
-              stars)
-              <br />
-              {visibleMarker.location}
-              <br />
-              {visibleMarker.rating}
-              <br />
-              <a href={visibleMarker.url}>Link</a>
-            </div>
+              <Popup>
+                <>
+                  {data.route} ({data.stars})
+                  <br />
+                  {data.location}
+                  <br />
+                  {data.rating}
+                  <br />
+                  <a href={data.url}>Link</a>
+                </>
+              </Popup>
+            </Marker>
           ))}
+        </MapContainer>
+        <MapList visibleMarkers={visibleMarkers} />
       </div>
     </div>
   )
