@@ -69,8 +69,10 @@ const minneapolisLongLat: LatLngExpression = [
   44.9778, -93.265
 ]
 
-function Test({ setNorthEast, setSouthWest }) {
+function MapEvents({ setNorthEast, setSouthWest }) {
   const map = useMap()
+
+  map.scrollWheelZoom.enable()
 
   useEffect(() => {
     setNorthEast(map.getBounds().getNorthEast())
@@ -82,6 +84,10 @@ function Test({ setNorthEast, setSouthWest }) {
       setSouthWest(mapEvents.getBounds().getSouthWest())
     },
     drag: () => {
+      setNorthEast(mapEvents.getBounds().getNorthEast())
+      setSouthWest(mapEvents.getBounds().getSouthWest())
+    },
+    resize: () => {
       setNorthEast(mapEvents.getBounds().getNorthEast())
       setSouthWest(mapEvents.getBounds().getSouthWest())
     }
@@ -96,8 +102,6 @@ export default function MyMap() {
   const [visibleMarkers, setVisibleMarkers] = useState<
     MarkerData[]
   >([])
-
-  console.log('visibleMarkers :>> ', visibleMarkers)
 
   useEffect(() => {
     if (northEast && southWest) {
@@ -130,7 +134,7 @@ export default function MyMap() {
         scrollWheelZoom={false}
         style={{ width: '100%', height: '1000px' }}
       >
-        <Test
+        <MapEvents
           setNorthEast={setNorthEast}
           setSouthWest={setSouthWest}
         />
@@ -145,7 +149,7 @@ export default function MyMap() {
           >
             <Popup>
               <>
-                {data.route}
+                {data.route} ({data.stars})
                 <br />
                 {data.location}
                 <br />
@@ -160,26 +164,39 @@ export default function MyMap() {
       <div
         style={{
           backgroundColor: 'white',
-          width: '30%'
+          width: '30%',
+          maxHeight: '1000px',
+          overflowY: 'scroll'
         }}
       >
-        {visibleMarkers.map((visibleMarker) => (
-          <div
-            key={visibleMarker.url}
-            style={{
-              border: '1px solid black',
-              color: 'black'
-            }}
-          >
-            {visibleMarker.route}
-            <br />
-            {visibleMarker.location}
-            <br />
-            {visibleMarker.rating}
-            <br />
-            <a href={visibleMarker.url}>Link</a>
-          </div>
-        ))}
+        <div
+          style={{
+            border: '1px solid black',
+            color: 'black'
+          }}
+        >
+          {visibleMarkers.length}
+        </div>
+        {visibleMarkers
+          .sort((a, b) => (a.stars > b.stars ? -1 : 1))
+          .map((visibleMarker) => (
+            <div
+              key={visibleMarker.url}
+              style={{
+                border: '1px solid black',
+                color: 'black'
+              }}
+            >
+              {visibleMarker.route} ({visibleMarker.stars}{' '}
+              stars)
+              <br />
+              {visibleMarker.location}
+              <br />
+              {visibleMarker.rating}
+              <br />
+              <a href={visibleMarker.url}>Link</a>
+            </div>
+          ))}
       </div>
     </div>
   )
