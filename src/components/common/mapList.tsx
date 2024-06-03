@@ -16,6 +16,7 @@ interface MarkerData {
 }
 
 interface MapListProps {
+  setHoveredMarker: (marker: MarkerData | null) => void
   visibleMarkers: MarkerData[]
 }
 
@@ -24,7 +25,8 @@ interface TabButtonProps {
 }
 
 export default function MapList({
-  visibleMarkers
+  visibleMarkers,
+  setHoveredMarker
 }: MapListProps) {
   const openInNewTab = (url: string) => {
     const newWindow = window.open(
@@ -48,11 +50,14 @@ export default function MapList({
         onClick={() => {
           openInNewTab(visibleMarker.url)
         }}
-        onMouseEnter={() => {
+        onMouseOver={() => {
           setHover(true)
+          setHoveredMarker(visibleMarker)
+          // setHoveredMarker(null)
         }}
-        onMouseLeave={() => {
+        onMouseOut={() => {
           setHover(false)
+          setHoveredMarker(null)
         }}
       >
         {visibleMarker.route} ({visibleMarker.stars} stars)

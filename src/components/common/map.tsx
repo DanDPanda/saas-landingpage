@@ -4,11 +4,9 @@ import {
   MapContainer,
   Marker,
   TileLayer,
-  Popup,
-  useMapEvents,
-  useMap
+  Popup
 } from 'react-leaflet'
-import type { LatLngExpression } from 'leaflet'
+import type { LatLngExpression, Map } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-defaulticon-compatibility'
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css'
@@ -18,6 +16,7 @@ import { southDakotaData } from '@/data/south-dakota'
 import { useState, useEffect } from 'react'
 import MapList from './mapList'
 import MapHeader from './mapHeader'
+import * as L from 'leaflet'
 
 interface MarkerData {
   latitude: number
@@ -71,60 +70,54 @@ const minneapolisLongLat: LatLngExpression = [
   44.9778, -93.265
 ]
 
-function MapEvents({ setNorthEast, setSouthWest }) {
-  const map = useMap()
+const greenIcon = new L.Icon({
+  iconUrl:
+    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+})
 
-  map.scrollWheelZoom.enable()
-
-  useEffect(() => {
-    setNorthEast(map.getBounds().getNorthEast())
-    setSouthWest(map.getBounds().getSouthWest())
-  }, [])
-  const mapEvents = useMapEvents({
-    zoomend: () => {
-      setNorthEast(mapEvents.getBounds().getNorthEast())
-      setSouthWest(mapEvents.getBounds().getSouthWest())
-    },
-    drag: () => {
-      setNorthEast(mapEvents.getBounds().getNorthEast())
-      setSouthWest(mapEvents.getBounds().getSouthWest())
-    },
-    resize: () => {
-      setNorthEast(mapEvents.getBounds().getNorthEast())
-      setSouthWest(mapEvents.getBounds().getSouthWest())
-    }
-  })
-
-  return null
-}
-
-export default function MyMap() {
-  const [isStarFilterOn, setIsStarFilterOn] =
-    useState(false)
+export default function MapComponent() {
+  const [map, setMap] = useState<Map | null>(null)
+  const [hoveredMarker, setHoveredMarker] =
+    useState<MarkerData | null>(null)
   const [currentMarkers, setCurrentMarkers] =
     useState(markers)
-  const [northEast, setNorthEast] = useState(null)
-  const [southWest, setSouthWest] = useState(null)
   const [visibleMarkers, setVisibleMarkers] = useState<
     MarkerData[]
   >([])
 
-  useEffect(() => {
-    if (northEast && southWest) {
-      const tempVisibleMarkers = currentMarkers.filter(
-        (marker) => {
-          return (
-            marker.latitude <= northEast.lat &&
-            marker.latitude >= southWest.lat &&
-            marker.longitude <= northEast.lng &&
-            marker.longitude >= southWest.lng
-          )
-        }
-      )
+  const recalculateMarkers = (m: Map) => {
+    const mapBounds = m.getBounds()
+    const northEast = mapBounds.getNorthEast()
+    const southWest = mapBounds.getSouthWest()
+    const tempVisibleMarkers = currentMarkers.filter(
+      (marker) => {
+        return (
+          marker.latitude <= northEast.lat &&
+          marker.latitude >= southWest.lat &&
+          marker.longitude <= northEast.lng &&
+          marker.longitude >= southWest.lng
+        )
+      }
+    )
 
-      setVisibleMarkers(tempVisibleMarkers)
+    setVisibleMarkers(tempVisibleMarkers)
+  }
+
+  map?.on('zoom', () => { recalculateMarkers(map); })
+  map?.on('resize', () => { recalculateMarkers(map); })
+  map?.on('drag', () => { recalculateMarkers(map); })
+
+  useEffect(() => {
+    if (map) {
+      recalculateMarkers(map)
     }
-  }, [northEast, southWest, currentMarkers])
+  }, [map, currentMarkers])
 
   return (
     <div
@@ -134,8 +127,6 @@ export default function MyMap() {
     >
       <MapHeader
         visibleMarkers={visibleMarkers}
-        isStarFilterOn={isStarFilterOn}
-        setIsStarFilterOn={setIsStarFilterOn}
         markers={markers}
         setCurrentMarkers={setCurrentMarkers}
       />
@@ -149,21 +140,16 @@ export default function MyMap() {
         <MapContainer
           center={minneapolisLongLat}
           zoom={10}
-          scrollWheelZoom={false}
+          scrollWheelZoom={true}
           style={{ width: '100%', height: '900px' }}
+          ref={setMap}
         >
-          <MapEvents
-            setNorthEast={setNorthEast}
-            setSouthWest={setSouthWest}
-          />
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           {currentMarkers.map((data) => (
             <Marker
               key={data.url}
               position={[data.latitude, data.longitude]}
+              icon={greenIcon}
             >
               <Popup>
                 <>
@@ -179,7 +165,10 @@ export default function MyMap() {
             </Marker>
           ))}
         </MapContainer>
-        <MapList visibleMarkers={visibleMarkers} />
+        <MapList
+          visibleMarkers={visibleMarkers}
+          setHoveredMarker={setHoveredMarker}
+        />
       </div>
     </div>
   )

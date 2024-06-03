@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import 'leaflet-defaulticon-compatibility'
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css'
 import Checkbox from '@mui/material/Checkbox'
+import { useState } from 'react'
 
 interface MarkerData {
   latitude: number
@@ -17,19 +18,18 @@ interface MarkerData {
 
 interface Props {
   visibleMarkers: MarkerData[]
-  isStarFilterOn: boolean
-  setIsStarFilterOn: (bool: boolean) => void
   markers: MarkerData[]
   setCurrentMarkers: (markers: MarkerData[]) => void
 }
 
 export default function MapHeader({
   visibleMarkers,
-  isStarFilterOn,
-  setIsStarFilterOn,
   markers,
   setCurrentMarkers
 }: Props) {
+  const [isStarFilterOn, setIsStarFilterOn] =
+    useState(false)
+
   return (
     <div
       style={{
