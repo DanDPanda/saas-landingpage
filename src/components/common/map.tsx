@@ -81,6 +81,17 @@ const greenIcon = new L.Icon({
   shadowSize: [41, 41]
 })
 
+const redIcon = new L.Icon({
+  iconUrl:
+    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+})
+
 export default function MapComponent() {
   const [map, setMap] = useState<Map | null>(null)
   const [hoveredMarker, setHoveredMarker] =
@@ -109,9 +120,15 @@ export default function MapComponent() {
     setVisibleMarkers(tempVisibleMarkers)
   }
 
-  map?.on('zoom', () => { recalculateMarkers(map); })
-  map?.on('resize', () => { recalculateMarkers(map); })
-  map?.on('drag', () => { recalculateMarkers(map); })
+  map?.on('zoom', () => {
+    recalculateMarkers(map)
+  })
+  map?.on('resize', () => {
+    recalculateMarkers(map)
+  })
+  map?.on('drag', () => {
+    recalculateMarkers(map)
+  })
 
   useEffect(() => {
     if (map) {
@@ -145,25 +162,51 @@ export default function MapComponent() {
           ref={setMap}
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          {currentMarkers.map((data) => (
+          {currentMarkers.map((data) =>
+            data.url !== hoveredMarker?.url ? (
+              <Marker
+                key={data.url}
+                position={[data.latitude, data.longitude]}
+                icon={greenIcon}
+              >
+                <Popup>
+                  <>
+                    {data.route} ({data.stars})
+                    <br />
+                    {data.location}
+                    <br />
+                    {data.rating}
+                    <br />
+                    <a href={data.url}>Link</a>
+                  </>
+                </Popup>
+              </Marker>
+            ) : null
+          )}
+          {hoveredMarker && (
             <Marker
-              key={data.url}
-              position={[data.latitude, data.longitude]}
-              icon={greenIcon}
+              key={hoveredMarker.url}
+              position={[
+                hoveredMarker.latitude,
+                hoveredMarker.longitude
+              ]}
+              icon={redIcon}
             >
               <Popup>
                 <>
-                  {data.route} ({data.stars})
+                  {hoveredMarker.route} (
+                  {hoveredMarker.stars}
+                  )
                   <br />
-                  {data.location}
+                  {hoveredMarker.location}
                   <br />
-                  {data.rating}
+                  {hoveredMarker.rating}
                   <br />
-                  <a href={data.url}>Link</a>
+                  <a href={hoveredMarker.url}>Link</a>
                 </>
               </Popup>
             </Marker>
-          ))}
+          )}
         </MapContainer>
         <MapList
           visibleMarkers={visibleMarkers}

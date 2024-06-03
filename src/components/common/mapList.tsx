@@ -53,7 +53,6 @@ export default function MapList({
         onMouseOver={() => {
           setHover(true)
           setHoveredMarker(visibleMarker)
-          // setHoveredMarker(null)
         }}
         onMouseOut={() => {
           setHover(false)
