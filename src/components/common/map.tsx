@@ -162,7 +162,7 @@ export default function MapComponent() {
           ref={setMap}
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          {currentMarkers.map((data) =>
+          {visibleMarkers.map((data) =>
             data.url !== hoveredMarker?.url ? (
               <Marker
                 key={data.url}
@@ -191,6 +191,7 @@ export default function MapComponent() {
                 hoveredMarker.longitude
               ]}
               icon={redIcon}
+              zIndexOffset={1000}
             >
               <Popup>
                 <>

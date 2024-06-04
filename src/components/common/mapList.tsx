@@ -45,7 +45,8 @@ export default function MapList({
         key={visibleMarker.url}
         style={{
           border: `1px solid ${hover ? 'red' : 'black'}`,
-          color: 'black'
+          color: 'black',
+          cursor: 'pointer'
         }}
         onClick={() => {
           openInNewTab(visibleMarker.url)
@@ -74,8 +75,7 @@ export default function MapList({
         backgroundColor: 'white',
         width: '30%',
         maxHeight: '900px',
-        overflowY: 'scroll',
-        cursor: 'pointer'
+        overflowY: 'scroll'
       }}
     >
       {visibleMarkers
