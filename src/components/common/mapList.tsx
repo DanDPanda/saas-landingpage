@@ -81,11 +81,11 @@ export default function MapList({
       {visibleMarkers
         .sort((a, b) => (a.stars > b.stars ? -1 : 1))
         .map((visibleMarker) => (
-          <TabButton
-            key={visibleMarker.url}
-            visibleMarker={visibleMarker}
-          />
-        ))}
+        <TabButton
+          key={visibleMarker.url}
+          visibleMarker={visibleMarker}
+        />
+      ))}
     </div>
   )
 }

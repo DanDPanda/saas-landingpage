@@ -6,14 +6,21 @@ import {
   TileLayer,
   Popup
 } from 'react-leaflet'
-import type { LatLngExpression, Map } from 'leaflet'
+import type { LatLngExpression, Map, Icon } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-defaulticon-compatibility'
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css'
 import { minnesotaData } from '@/data/minnesota'
 import { wisconsinData } from '@/data/wisconsin'
 import { southDakotaData } from '@/data/south-dakota'
-import { useState, useEffect } from 'react'
+import { southBluffData } from '@/data/south-bluff'
+import { westBluffSouthData } from '@/data/west-bluff-south'
+import { westBluffCentralData } from '@/data/west-bluff-central'
+import { westBluffNorthData } from '@/data/west-bluff-north'
+import { eastBluffNorthData } from '@/data/east-bluff-north'
+import { eastBluffSouthData } from '@/data/east-bluff-south'
+import { eastBluffSouthFaceData } from '@/data/east-bluff-south-face'
+import { useState, useEffect, useMemo } from 'react'
 import MapList from './mapList'
 import MapHeader from './mapHeader'
 import * as L from 'leaflet'
@@ -26,14 +33,44 @@ interface MarkerData {
   rating: string
   stars: number
   route: string | number
+  icon: Icon
+  zIndex: number
 }
+
+const greenIcon = new L.Icon({
+  iconUrl:
+    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+})
+
+const redIcon = new L.Icon({
+  iconUrl:
+    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+})
 
 const markers: MarkerData[] = []
 
 const combinedData = [
-  ...minnesotaData,
-  ...wisconsinData,
-  ...southDakotaData
+  ...eastBluffNorthData
+  // ...eastBluffSouthData,
+  // ...eastBluffSouthFaceData,
+  // ...southBluffData,
+  // ...westBluffSouthData,
+  // ...westBluffCentralData,
+  // ...westBluffNorthData
+  // ...minnesotaData,
+  // ...wisconsinData
 ]
 combinedData.forEach((data) => {
   const tempData = structuredClone(data)
@@ -62,35 +99,15 @@ combinedData.forEach((data) => {
     location: tempData.Location,
     rating: tempData.Rating,
     stars: tempData['Avg Stars'],
-    route: tempData.Route
+    route: tempData.Route,
+    icon: greenIcon,
+    zIndex: 0
   })
 })
 
 const minneapolisLongLat: LatLngExpression = [
-  44.9778, -93.265
+  43.41921, -89.728
 ]
-
-const greenIcon = new L.Icon({
-  iconUrl:
-    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-  shadowUrl:
-    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-})
-
-const redIcon = new L.Icon({
-  iconUrl:
-    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-  shadowUrl:
-    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-})
 
 export default function MapComponent() {
   const [map, setMap] = useState<Map | null>(null)
@@ -136,6 +153,21 @@ export default function MapComponent() {
     }
   }, [map, currentMarkers])
 
+  const f = useMemo(() => {
+    const items = [...visibleMarkers]
+    const item = visibleMarkers.findIndex(
+      (visibleMarker) =>
+        visibleMarker.url === hoveredMarker?.url
+    )
+    items[item] = {
+      ...items[item],
+      icon: redIcon,
+      zIndex: 100
+    }
+
+    return items
+  }, [hoveredMarker, visibleMarkers])
+
   return (
     <div
       style={{
@@ -156,18 +188,19 @@ export default function MapComponent() {
       >
         <MapContainer
           center={minneapolisLongLat}
-          zoom={10}
+          zoom={15}
           scrollWheelZoom={true}
           style={{ width: '100%', height: '900px' }}
           ref={setMap}
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          {visibleMarkers.map((data) =>
-            data.url !== hoveredMarker?.url ? (
+          {f.map((data) => {
+            return (
               <Marker
                 key={data.url}
                 position={[data.latitude, data.longitude]}
-                icon={greenIcon}
+                icon={data.icon}
+                zIndexOffset={data.zIndex}
               >
                 <Popup>
                   <>
@@ -181,33 +214,8 @@ export default function MapComponent() {
                   </>
                 </Popup>
               </Marker>
-            ) : null
-          )}
-          {hoveredMarker && (
-            <Marker
-              key={hoveredMarker.url}
-              position={[
-                hoveredMarker.latitude,
-                hoveredMarker.longitude
-              ]}
-              icon={redIcon}
-              zIndexOffset={1000}
-            >
-              <Popup>
-                <>
-                  {hoveredMarker.route} (
-                  {hoveredMarker.stars}
-                  )
-                  <br />
-                  {hoveredMarker.location}
-                  <br />
-                  {hoveredMarker.rating}
-                  <br />
-                  <a href={hoveredMarker.url}>Link</a>
-                </>
-              </Popup>
-            </Marker>
-          )}
+            )
+          })}
         </MapContainer>
         <MapList
           visibleMarkers={visibleMarkers}

@@ -9,7 +9,7 @@ export default function Home() {
     >
       <div className="flex flex-col gap-6 items-center">
         <Typography className="max-w-2xl" variant="h1">
-          Mid-West Bouldering Map
+          Devil's Lake Map
         </Typography>
       </div>
       <Map />
